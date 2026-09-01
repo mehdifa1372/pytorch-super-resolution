@@ -1,4 +1,4 @@
-"""Module entry point for ``python -m super_resolution``."""
+"""Research CLI entry point for ``python -m super_resolution``."""
 
 from super_resolution.cli import main
 
