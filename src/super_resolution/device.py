@@ -1,4 +1,4 @@
-"""Runtime device selection."""
+"""Explicit runtime-device selection for reproducible experiments."""
 
 from __future__ import annotations
 
@@ -21,4 +21,3 @@ def resolve_device(requested: str = "auto") -> torch.device:
     if normalized not in {"cpu", "cuda", "mps"}:
         raise ValueError("device must be one of: auto, cpu, cuda, mps")
     return torch.device(normalized)
-

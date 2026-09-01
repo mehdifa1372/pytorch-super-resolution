@@ -1,4 +1,4 @@
-"""SRCNN model definition."""
+"""SRCNN fidelity baseline used in controlled experiments."""
 
 from __future__ import annotations
 
@@ -48,4 +48,3 @@ class SRCNN(nn.Module):
             "in_channels": self.in_channels,
             "hidden_channels": list(self.hidden_channels),
         }
-

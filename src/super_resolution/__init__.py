@@ -1,4 +1,4 @@
-"""Trainable image super-resolution with PyTorch."""
+"""Reproducible face super-resolution research with PyTorch."""
 
 from .device import resolve_device
 from .metrics import peak_signal_to_noise_ratio, structural_similarity
@@ -10,4 +10,3 @@ __all__ = [
     "resolve_device",
     "structural_similarity",
 ]
-

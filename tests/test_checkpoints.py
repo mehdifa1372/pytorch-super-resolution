@@ -22,4 +22,4 @@ def test_checkpoint_round_trip(tmp_path: Path):
     assert restored.hidden_channels == (8, 4)
     assert metadata["epoch"] == 3
     assert metadata["scale"] == 2
-
+    assert metadata["format_version"] == 1
