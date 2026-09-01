@@ -1,4 +1,4 @@
-"""Generate a tiny synthetic image dataset for an end-to-end smoke run."""
+"""Generate synthetic images for pipeline checks, never for research claims."""
 
 from __future__ import annotations
 
@@ -51,4 +51,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
