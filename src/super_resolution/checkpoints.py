@@ -1,4 +1,4 @@
-"""Safe, explicit checkpoint persistence."""
+"""Safe checkpoint persistence with reproducible experiment metadata."""
 
 from __future__ import annotations
 
@@ -53,4 +53,3 @@ def load_model(
     model.load_state_dict(checkpoint["model"])
     model.to(device).eval()
     return model, checkpoint
-
