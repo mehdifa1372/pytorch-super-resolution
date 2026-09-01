@@ -134,20 +134,3 @@ appearance, or actions.
 └── .github/workflows/      # lint and test checks
 ```
 
-## Current status
-
-Infrastructure and the SRCNN baseline are implemented. CelebA-HQ training, multi-seed
-evaluation, qualitative error analysis, and checkpoint publication remain pending. This README
-will not claim performance until those experiments are run and recorded.
-
-## Limitations and responsible use
-
-CelebA-HQ is a celebrity-face dataset derived from internet imagery. It carries demographic,
-pose, styling, and selection biases and does not represent all people or capture conditions.
-SRCNN optimizes pixel fidelity and often smooths high-frequency texture. Super-resolution can
-also create plausible-looking detail that was never present in the input.
-
-This work is for non-commercial research. It must not be used for face recognition, identity
-verification, surveillance, biometric inference, forensics, or consequential decisions.
-
-```
