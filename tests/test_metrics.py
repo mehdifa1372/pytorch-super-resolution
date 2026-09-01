@@ -15,3 +15,8 @@ def test_noise_reduces_quality_metrics():
     assert peak_signal_to_noise_ratio(prediction, target) < 30
     assert structural_similarity(prediction, target) < 1
 
+
+def test_psnr_is_reported_in_decibels():
+    target = torch.zeros(1, 3, 8, 8)
+    prediction = torch.full_like(target, 0.1)
+    assert torch.allclose(peak_signal_to_noise_ratio(prediction, target), torch.tensor(20.0))
