@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import torch
-from torch.nn import functional as functional
+from torch.nn import functional
 
 
 def _validate_pair(prediction: torch.Tensor, target: torch.Tensor) -> None:
