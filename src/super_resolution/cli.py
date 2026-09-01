@@ -17,6 +17,8 @@ def build_parser() -> argparse.ArgumentParser:
     train = commands.add_parser("train", help="Train an SRCNN checkpoint")
     train.add_argument("--train-dir", type=Path, required=True)
     train.add_argument("--validation-dir", type=Path, required=True)
+    train.add_argument("--train-manifest", type=Path)
+    train.add_argument("--validation-manifest", type=Path)
     train.add_argument("--output-dir", type=Path, default=Path("artifacts"))
     train.add_argument("--scale", type=int, default=2)
     train.add_argument("--patch-size", type=int, default=96)
@@ -37,6 +39,7 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate = commands.add_parser("evaluate", help="Evaluate a checkpoint on HR images")
     evaluate.add_argument("--checkpoint", type=Path, required=True)
     evaluate.add_argument("--data-dir", type=Path, required=True)
+    evaluate.add_argument("--manifest", type=Path)
     evaluate.add_argument("--patch-size", type=int)
     evaluate.add_argument("--batch-size", type=int, default=4)
     evaluate.add_argument("--workers", type=int, default=0)
@@ -51,6 +54,8 @@ def main(argv: list[str] | None = None) -> None:
             TrainingConfig(
                 train_dir=args.train_dir,
                 validation_dir=args.validation_dir,
+                train_manifest=args.train_manifest,
+                validation_manifest=args.validation_manifest,
                 output_dir=args.output_dir,
                 scale=args.scale,
                 patch_size=args.patch_size,
@@ -80,9 +85,9 @@ def main(argv: list[str] | None = None) -> None:
         batch_size=args.batch_size,
         workers=args.workers,
         device_name=args.device,
+        manifest=args.manifest,
     )
 
 
 if __name__ == "__main__":
     main()
-

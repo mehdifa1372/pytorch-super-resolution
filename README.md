@@ -1,28 +1,38 @@
-# PyTorch Image Super-Resolution
+# Face Super-Resolution with PyTorch
 
-A reproducible, portfolio-ready implementation of SRCNN for single-image super-resolution. The project supports training, evaluation, and checkpoint inference on CPU, NVIDIA CUDA, and Apple Metal (MPS), with no notebook-only logic.
+A reproducible research codebase for studying single-image super-resolution on aligned
+celebrity faces. The primary benchmark is **CelebA-HQ at x2 scale** and the initial model is
+SRCNN, retained as a transparent fidelity-oriented baseline.
+
+The repository contains code only. It does not redistribute CelebA-HQ images, trained weights,
+or unverified results.
 
 ```mermaid
 flowchart LR
-    LR["Low-resolution image"] --> BI["Bicubic enlargement"]
-    BI --> C1["9×9 convolution"]
-    C1 --> C2["5×5 mapping"]
-    C2 --> C3["5×5 reconstruction"]
-    C3 --> SR["Super-resolved image"]
+    HR["CelebA-HQ image"] --> DG["Bicubic degradation"]
+    DG --> LR["Low-resolution input"]
+    LR --> BC["Bicubic baseline"]
+    BC --> NN["SRCNN refinement"]
+    NN --> EV["PSNR / SSIM evaluation"]
 ```
 
-## Portfolio highlights
+## Research questions
 
-- Clean, installable `src/` package with typed APIs and a CLI.
-- On-the-fly low/high-resolution pair generation from ordinary images.
-- Automatic `cuda` → `mps` → `cpu` device selection.
-- Deterministic seeding and chronological run metadata.
-- PSNR and SSIM evaluation.
-- Versioned checkpoints with model configuration and scale metadata.
-- Unit tests, linting, and GitHub Actions CI.
-- Synthetic demo-data generator for an immediate end-to-end smoke run.
+1. How much does SRCNN improve PSNR and SSIM over bicubic interpolation on aligned faces?
+2. How sensitive is the improvement to scale, crop size, and random seed?
+3. Where does a pixel-loss baseline fail on hair, teeth, eyes, accessories, and backgrounds?
+4. Do gains measured on synthetic bicubic degradation transfer to naturally degraded images?
 
-## Quick start
+## Reproducibility contract
+
+- Dataset splits are deterministic, manifest-based, and image-disjoint.
+- Degraded inputs are generated on demand from high-resolution targets.
+- Every evaluation reports the bicubic baseline on the same examples.
+- Checkpoints store architecture, scale, epoch, optimizer state, and recorded metrics.
+- No score is reported without a completed model card and experiment record.
+- CPU, NVIDIA CUDA, and Apple MPS execution are supported.
+
+## Install
 
 Python 3.10 or newer is recommended.
 
@@ -33,113 +43,123 @@ python -m pip install --upgrade pip
 pip install -e ".[dev]"
 ```
 
-Generate a tiny synthetic dataset and perform a short CPU smoke run:
+## Prepare CelebA-HQ
+
+CelebA-HQ contains 30,000 images at 1024×1024. Obtain and prepare it yourself under the
+applicable CelebA/CelebA-HQ terms. The project intentionally has no automatic downloader because
+the images may not be redistributed and CelebA is restricted to non-commercial research.
+See [the dataset protocol](docs/DATASET.md) before proceeding.
+
+Assuming the prepared images are under `data/CelebA-HQ/`:
 
 ```bash
-python scripts/make_demo_data.py --output-dir data/demo
-
-super-resolution train \
-  --train-dir data/demo/train \
-  --validation-dir data/demo/validation \
-  --output-dir artifacts/demo \
-  --scale 2 \
-  --patch-size 64 \
-  --epochs 2 \
-  --batch-size 4 \
-  --device cpu
+python scripts/prepare_celeba_hq.py \
+  --data-dir data/CelebA-HQ \
+  --output-dir splits/celeba_hq \
+  --seed 42
 ```
 
-The synthetic images verify the pipeline; they do not establish meaningful real-world quality.
+This validates the expected image count and writes `train.txt`, `validation.txt`, `test.txt`,
+and `metadata.json`. Manifests contain only root-relative paths; images are neither copied nor
+committed. The default 80/10/10 split is image-disjoint, not identity-disjoint.
 
-## Train on real images
-
-Place high-resolution training and validation images in separate directories. The loader accepts PNG, JPEG, BMP, TIFF, and WebP files and creates degraded pairs at runtime.
+## Train the x2 baseline
 
 ```bash
 super-resolution train \
-  --train-dir data/train \
-  --validation-dir data/validation \
-  --output-dir artifacts/srcnn-x2 \
+  --train-dir data/CelebA-HQ \
+  --train-manifest splits/celeba_hq/train.txt \
+  --validation-dir data/CelebA-HQ \
+  --validation-manifest splits/celeba_hq/validation.txt \
+  --output-dir artifacts/celeba-hq-srcnn-x2-seed42 \
   --scale 2 \
   --patch-size 96 \
   --epochs 20 \
   --batch-size 16 \
+  --seed 42 \
   --device auto
 ```
 
-`auto` selects CUDA when available, then Apple MPS, then CPU. The best validation-PSNR checkpoint is written to `artifacts/srcnn-x2/best.pt`; the most recent checkpoint is `last.pt`.
+`auto` selects CUDA, then MPS, then CPU. The best validation-PSNR checkpoint is saved as
+`best.pt`, the latest as `last.pt`, and the complete configuration/history as `run.json`.
 
-## Pretrained-checkpoint inference
-
-The inference command loads a checkpoint produced by this project, validates its scale metadata, performs bicubic enlargement, and applies SRCNN refinement:
+For a dependency-light smoke test, generate synthetic data first:
 
 ```bash
-super-resolution infer \
-  --checkpoint artifacts/srcnn-x2/best.pt \
-  --input examples/low-resolution.png \
-  --output outputs/super-resolved.png \
-  --device auto
+python scripts/make_demo_data.py --output-dir data/demo
+super-resolution train --train-dir data/demo/train \
+  --validation-dir data/demo/validation --output-dir artifacts/smoke \
+  --epochs 1 --batch-size 4 --device cpu
 ```
 
-No third-party weights are silently downloaded. Publish a checkpoint only after recording its dataset license, configuration, validation results, and SHA-256 digest. See [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md).
+Synthetic data tests the pipeline only; it is not a research result.
 
-## Evaluate a checkpoint
+## Evaluate against bicubic
 
 ```bash
 super-resolution evaluate \
-  --checkpoint artifacts/srcnn-x2/best.pt \
-  --data-dir data/test \
+  --checkpoint artifacts/celeba-hq-srcnn-x2-seed42/best.pt \
+  --data-dir data/CelebA-HQ \
+  --manifest splits/celeba_hq/test.txt \
   --batch-size 4 \
   --device auto
 ```
 
-The command reports MSE loss, PSNR, and SSIM. For a defensible comparison, evaluate the bicubic baseline on exactly the same images and crop policy.
+The JSON output includes SRCNN and bicubic MSE, PSNR, and SSIM, plus PSNR/SSIM gains. Use the
+same checkpoint, manifest, degradation, crop, and color-space policy for every comparison.
 
-## Project structure
+## Inference
 
-```text
-.
-├── src/super_resolution/
-│   ├── model.py          # SRCNN architecture
-│   ├── data.py           # paired image dataset
-│   ├── training.py       # training and validation loops
-│   ├── inference.py      # checkpoint inference and evaluation
-│   ├── metrics.py        # PSNR and SSIM
-│   └── cli.py            # train, infer, evaluate commands
-├── scripts/make_demo_data.py
-├── tests/
-├── docs/MODEL_CARD.md
-└── .github/workflows/quality.yml
+```bash
+super-resolution infer \
+  --checkpoint artifacts/celeba-hq-srcnn-x2-seed42/best.pt \
+  --input examples/face-low-resolution.png \
+  --output outputs/face-srcnn-x2.png \
+  --device auto
 ```
 
-## Evaluation protocol
+Do not treat hallucinated or reconstructed facial detail as evidence of a person's identity,
+appearance, or actions.
 
-For portfolio or research results, record:
+## Repository layout
 
-- Dataset name, version, license, and exact split.
-- Scale factor and degradation process.
-- Whether metrics use RGB or luminance and whether borders are cropped.
-- Bicubic baseline and trained-model PSNR/SSIM.
-- Seed, hardware, PyTorch version, epochs, and runtime.
-- Parameter count and average inference latency.
-- Representative successes and failures without cherry-picking.
+```text
+├── src/super_resolution/   # model, data, metrics, training, inference
+├── scripts/                # local data preparation and smoke-data generation
+├── tests/                  # unit tests
+├── docs/
+│   ├── DATASET.md          # access, license, bias, and split protocol
+│   ├── EXPERIMENTS.md      # required experiment table and ablations
+│   └── MODEL_CARD.md       # checkpoint reporting template
+└── .github/workflows/      # lint and test checks
+```
 
-This repository does not claim an unverified score.
+## Current status
 
-## Limitations
+Infrastructure and the SRCNN baseline are implemented. CelebA-HQ training, multi-seed
+evaluation, qualitative error analysis, and checkpoint publication remain pending. This README
+will not claim performance until those experiments are run and recorded.
 
-SRCNN is intentionally small and educational. It will not match modern transformer or GAN-based methods on perceptual quality. Pixel losses can produce smooth results, PSNR/SSIM do not fully capture human preference, and performance depends strongly on whether test degradation matches training.
+## Limitations and responsible use
 
-## Roadmap
+CelebA-HQ is a celebrity-face dataset derived from internet imagery. It carries demographic,
+pose, styling, and selection biases and does not represent all people or capture conditions.
+SRCNN optimizes pixel fidelity and often smooths high-frequency texture. Super-resolution can
+also create plausible-looking detail that was never present in the input.
 
-- Publish a reproducible x2 checkpoint and completed model card.
-- Add bicubic-baseline metrics to the evaluation command.
-- Add tiled inference for very large images.
-- Add residual and sub-pixel convolution baselines.
-- Compare fidelity-oriented and perceptual objectives.
-- Add an interactive before/after demonstration.
+This work is for non-commercial research. It must not be used for face recognition, identity
+verification, surveillance, biometric inference, forensics, or consequential decisions.
 
-## Author
+## Citation
 
-Mehdi Faraz — computer vision, machine learning, data science, and applied AI.
+If you use the dataset, cite both the CelebA and CelebA-HQ/Progressive GAN sources listed in
+[the dataset protocol](docs/DATASET.md). If you use the model implementation, cite SRCNN:
 
+```bibtex
+@article{dong2015srcnn,
+  title={Image Super-Resolution Using Deep Convolutional Networks},
+  author={Dong, Chao and Loy, Chen Change and He, Kaiming and Tang, Xiaoou},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  year={2015}
+}
+```

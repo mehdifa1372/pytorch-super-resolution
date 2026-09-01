@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pytorch-image-super-resolution"
-version = "0.1.0"
-description = "Train, evaluate, and run SRCNN image super-resolution with PyTorch"
+version = "0.2.0"
+description = "Reproducible face super-resolution research on CelebA-HQ with PyTorch"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -20,6 +20,7 @@ dev = ["pytest>=8,<10", "ruff>=0.6,<1"]
 
 [project.scripts]
 super-resolution = "super_resolution.cli:main"
+prepare-celeba-hq = "super_resolution.splits_cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -30,4 +31,3 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
-

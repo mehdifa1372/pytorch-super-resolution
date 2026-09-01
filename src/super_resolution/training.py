@@ -24,6 +24,8 @@ from .model import SRCNN
 class TrainingConfig:
     train_dir: Path
     validation_dir: Path
+    train_manifest: Path | None = None
+    validation_manifest: Path | None = None
     output_dir: Path = Path("artifacts")
     scale: int = 2
     patch_size: int = 96
@@ -96,12 +98,14 @@ def train_model(config: TrainingConfig) -> list[dict[str, float]]:
         scale=config.scale,
         patch_size=config.patch_size,
         training=True,
+        manifest=config.train_manifest,
     )
     validation_dataset = SuperResolutionDataset(
         config.validation_dir,
         scale=config.scale,
         patch_size=config.patch_size,
         training=False,
+        manifest=config.validation_manifest,
     )
     generator = torch.Generator().manual_seed(config.seed)
     training_loader = DataLoader(
@@ -181,4 +185,3 @@ def train_model(config: TrainingConfig) -> list[dict[str, float]]:
         encoding="utf-8",
     )
     return history
-
