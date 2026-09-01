@@ -1,4 +1,4 @@
-"""Image-quality metrics implemented with PyTorch."""
+"""Reference fidelity metrics used by the research evaluation protocol."""
 
 from __future__ import annotations
 
