@@ -150,16 +150,4 @@ also create plausible-looking detail that was never present in the input.
 This work is for non-commercial research. It must not be used for face recognition, identity
 verification, surveillance, biometric inference, forensics, or consequential decisions.
 
-## Citation
-
-If you use the dataset, cite both the CelebA and CelebA-HQ/Progressive GAN sources listed in
-[the dataset protocol](docs/DATASET.md). If you use the model implementation, cite SRCNN:
-
-```bibtex
-@article{dong2015srcnn,
-  title={Image Super-Resolution Using Deep Convolutional Networks},
-  author={Dong, Chao and Loy, Chen Change and He, Kaiming and Tang, Xiaoou},
-  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
-  year={2015}
-}
 ```
