@@ -1,4 +1,4 @@
-"""Pillow and tensor image conversion helpers."""
+"""Deterministic image conversion and bicubic-degradation helpers."""
 
 from __future__ import annotations
 
@@ -38,4 +38,3 @@ def bicubic_pair(high_resolution: Image.Image, scale: int) -> tuple[Image.Image,
     low_resolution = target.resize((width // scale, height // scale), Image.Resampling.BICUBIC)
     bicubic = low_resolution.resize((width, height), Image.Resampling.BICUBIC)
     return bicubic, target
-
