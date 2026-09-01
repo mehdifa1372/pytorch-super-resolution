@@ -62,6 +62,7 @@ def evaluate_checkpoint(
     batch_size: int = 4,
     workers: int = 0,
     device_name: str = "auto",
+    manifest: str | Path | None = None,
 ) -> dict[str, object]:
     device = resolve_device(device_name)
     model, checkpoint = load_model(checkpoint_path, device=device)
@@ -71,17 +72,22 @@ def evaluate_checkpoint(
         scale=scale,
         patch_size=patch_size,
         training=False,
+        manifest=manifest,
     )
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=workers)
     metrics = evaluate_model(model, loader, device)
+    bicubic_metrics = evaluate_model(torch.nn.Identity(), loader, device)
     result: dict[str, object] = {
         "checkpoint": str(checkpoint_path),
         "data_dir": str(data_dir),
         "examples": len(dataset),
         "scale": scale,
         "device": str(device),
-        **metrics,
+        "manifest": str(manifest) if manifest is not None else None,
+        "srcnn": metrics,
+        "bicubic": bicubic_metrics,
+        "psnr_gain_db": metrics["psnr"] - bicubic_metrics["psnr"],
+        "ssim_gain": metrics["ssim"] - bicubic_metrics["ssim"],
     }
     print(json.dumps(result, indent=2, sort_keys=True))
     return result
-
